@@ -1,0 +1,7 @@
+cmake_minimum_required(VERSION 3.15)
+project(blend_layer_dsp CXX)
+set(MINHOOK_DIR ${CMAKE_SOURCE_DIR}/../Dependencies/static/x64-windows-static)
+add_library(BeamNGBlendLayerDSP SHARED blend_layer_dsp.cpp)
+target_include_directories(BeamNGBlendLayerDSP PRIVATE ${MINHOOK_DIR}/include)
+target_link_libraries(BeamNGBlendLayerDSP ws2_32 ${MINHOOK_DIR}/lib/minhook.x64.lib)
+set_property(TARGET BeamNGBlendLayerDSP PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded")

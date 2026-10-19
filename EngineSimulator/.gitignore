@@ -1,0 +1,12 @@
+# Ignore user's workspace
+workspace/
+
+# Build directory
+build/
+
+# clangd cache and code completion files
+.cache
+compile_commands.json
+
+# Blender temporary files
+*.blend1

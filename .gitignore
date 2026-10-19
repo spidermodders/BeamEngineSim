@@ -1,0 +1,8 @@
+/Dependencies/*
+!/Dependencies/vcpkg.json
+/out/
+build/
+*.zip
+*.mp4
+*.log
+beam_bridge.ini

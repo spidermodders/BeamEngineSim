@@ -1,0 +1,15 @@
+[submodule "EngineSimulator/dependencies/submodules/csv-io"]
+	path = EngineSimulator/dependencies/submodules/csv-io
+	url = https://github.com/ange-yaghi/csv-io
+[submodule "EngineSimulator/dependencies/submodules/delta-studio"]
+	path = EngineSimulator/dependencies/submodules/delta-studio
+	url = https://github.com/ange-yaghi/delta-studio
+[submodule "EngineSimulator/dependencies/submodules/direct-to-video"]
+	path = EngineSimulator/dependencies/submodules/direct-to-video
+	url = https://github.com/ange-yaghi/direct-to-video
+[submodule "EngineSimulator/dependencies/submodules/piranha"]
+	path = EngineSimulator/dependencies/submodules/piranha
+	url = https://github.com/ange-yaghi/piranha.git
+[submodule "EngineSimulator/dependencies/submodules/simple-2d-constraint-solver"]
+	path = EngineSimulator/dependencies/submodules/simple-2d-constraint-solver
+	url = https://github.com/ange-yaghi/simple-2d-constraint-solver

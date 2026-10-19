@@ -1,0 +1,28 @@
+{
+  "header": {
+    "version": 1
+  },
+  "eventName": "event:>Engine>default",
+  "samples": [
+    [
+      [
+        "art/sound/engineSim/engineSimMarkerEngine.wav",
+        500
+      ],
+      [
+        "art/sound/engineSim/engineSimMarkerEngine.wav",
+        10000
+      ]
+    ],
+    [
+      [
+        "art/sound/engineSim/engineSimMarkerEngine.wav",
+        500
+      ],
+      [
+        "art/sound/engineSim/engineSimMarkerEngine.wav",
+        10000
+      ]
+    ]
+  ]
+}

@@ -1,0 +1,49 @@
+diff --git a/src/yds_d3d11_device.cpp b/src/yds_d3d11_device.cpp
+index b0362dd..64e59cd 100644
+--- a/src/yds_d3d11_device.cpp
++++ b/src/yds_d3d11_device.cpp
+@@ -11,6 +11,11 @@
+ 
+ #include "../include/yds_windows_window.h"
+ 
++// d3dx11_43.dll is not on stock Windows; d3dcompiler_47.dll is
++#include <d3dcompiler.h>
++#include <string>
++#pragma comment(lib, "d3dcompiler.lib")
++
+ #include <d3d11.h>
+ 
+ #pragma warning(push, 0)
+@@ -991,7 +996,7 @@ ysError ysD3D11Device::CreateVertexShader(ysShader **newShader, const char *shad
+     ID3D10Blob *shaderBlob;
+ 
+     HRESULT result;
+-    result = D3DX11CompileFromFile(shaderFilename, nullptr, nullptr, shaderName, "vs_4_0", D3D10_SHADER_ENABLE_STRICTNESS, 0, nullptr, &shaderBlob, &error, nullptr);
++    result = D3DCompileFromFile(std::wstring(shaderFilename, shaderFilename + strlen(shaderFilename)).c_str(), nullptr, nullptr, shaderName, "vs_4_0", D3D10_SHADER_ENABLE_STRICTNESS, 0, &shaderBlob, &error);
+ 
+     if (FAILED(result)) {
+         return YDS_ERROR_RETURN_MSG(ysError::VertexShaderCompilationError, (char *)error->GetBufferPointer());
+@@ -1033,7 +1038,7 @@ ysError ysD3D11Device::CreatePixelShader(ysShader **newShader, const char *shade
+     ID3D10Blob *shaderBlob;
+ 
+     HRESULT result;
+-    result = D3DX11CompileFromFile(shaderFilename, nullptr, nullptr, shaderName, "ps_4_0", D3D10_SHADER_ENABLE_STRICTNESS, 0, nullptr, &shaderBlob, &error, nullptr);
++    result = D3DCompileFromFile(std::wstring(shaderFilename, shaderFilename + strlen(shaderFilename)).c_str(), nullptr, nullptr, shaderName, "ps_4_0", D3D10_SHADER_ENABLE_STRICTNESS, 0, &shaderBlob, &error);
+ 
+     if (FAILED(result)) {
+         return YDS_ERROR_RETURN_MSG(ysError::FragmentShaderCompilationError, (char *)error->GetBufferPointer());
+diff --git a/src/yds_windows_input_system.cpp b/src/yds_windows_input_system.cpp
+index 66e0328..b2b0672 100644
+--- a/src/yds_windows_input_system.cpp
++++ b/src/yds_windows_input_system.cpp
+@@ -252,6 +252,10 @@ int ysWindowsInputSystem::ProcessInputMessage(HRAWINPUT lparam) {
+             device = AddDevice(raw);
+         }
+     }
++    else if (raw->header.dwType == RIM_TYPEKEYBOARD) {
++        // Injected input (SendInput) has no device handle: give it to the first keyboard
++        device = GetInputDevice(0, ysInputDevice::InputDeviceType::KEYBOARD);
++    }
+ 
+     if (device != nullptr) {
+         if (raw->header.dwType == RIM_TYPEKEYBOARD) {
