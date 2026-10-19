@@ -129,6 +129,7 @@ void EngineSimApplication::initialize(void *instance, ysContextObject::DeviceAPI
     settings.WindowHeight = 1080;
 
     m_engine.CreateGameWindow(settings);
+    bridgeSettingsSetAppIcon();
 
     m_engine.GetDevice()->CreateSubRenderTarget(
         &m_mainRenderTarget,
@@ -297,7 +298,7 @@ void EngineSimApplication::process(float frame_dt) {
 }
 
 void EngineSimApplication::feedLocalAudio() {
-    if (m_bridgeActive) m_audioSource->SetVolume(0.0f);
+    m_audioSource->SetVolume(m_bridgeActive ? 0.0f : 1.0f);
 
     const SampleOffset safeWritePosition = m_audioSource->GetCurrentWritePosition();
     const SampleOffset writePosition = m_audioBuffer.m_writePointer;
@@ -397,6 +398,7 @@ void EngineSimApplication::run() {
             m_simThread = std::thread(&EngineSimApplication::simulationThread, this);
         }
         std::unique_lock<std::mutex> simLock(m_simMutex);
+        bridgeSettingsReport(m_bridgeActive, m_engine.GetAverageFramerate());
 
         if (m_engine.ProcessKeyDown(ysKey::Code::Return) || bridgeSettingsTakeEnginePath(&m_scriptPath)) {
             m_audioSource->SetMode(ysAudioSource::Mode::Stop);
@@ -1085,7 +1087,7 @@ void EngineSimApplication::processBeamBridge(float dt) {
     if (!beamBridgeLatest(&m_bridgeIn, &age, &smoothRpm)) age = 1e9;
     m_bridgeAge = (float)age;
 
-    const bool active = m_bridgeAge < 0.5f;
+    const bool active = bridgeSettingsConnect() && m_bridgeAge < 0.5f;
     if (!active) {
         if (m_bridgeActive) {
             m_simulator->m_dyno.m_enabled = false;

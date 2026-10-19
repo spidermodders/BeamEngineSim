@@ -14,5 +14,8 @@ std::string bridgeSettingsLastEnginePath();
 bool bridgeSettingsTakeRetune();
 void bridgeSettingsSetLoadError(const std::string &message);
 void bridgeSettingsSetEnginePath(const std::string &path);
+bool bridgeSettingsConnect();
+void bridgeSettingsReport(bool linked, float fps);
+void bridgeSettingsSetAppIcon();
 
 #endif /* ATG_ENGINE_SIM_BRIDGE_SETTINGS_H */

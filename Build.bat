@@ -120,7 +120,7 @@ exit /b 0
 echo.
 echo == BeamNG mod
 if exist "%OUT%\engineSimBridge.zip" del "%OUT%\engineSimBridge.zip"
-powershell -NoProfile -Command "Compress-Archive -Path 'EngineSimulatorMod\*' -DestinationPath '%OUT%\engineSimBridge.zip'" || exit /b 1
+tar -a -cf "%OUT%\engineSimBridge.zip" -C EngineSimulatorMod art lua mod_info || exit /b 1
 exit /b 0
 
 

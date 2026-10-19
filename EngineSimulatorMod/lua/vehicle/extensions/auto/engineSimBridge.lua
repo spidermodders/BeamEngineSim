@@ -167,11 +167,13 @@ local function updateGFX(dt)
     end
   end
 
+  -- Stock sound and engine come back while EngineSim is closed or disconnected
   local seated = playerInfo.firstPlayerSeated == true
-  if seated ~= active then useMarkerBlends(seated) end
-  if not seated and appliedProfileId then restoreStockEngine() end
-  active = seated
-  if not active then return end
+  local linked = seated and esAge < 1
+  if linked ~= active then useMarkerBlends(linked) end
+  if not linked and appliedProfileId then restoreStockEngine() end
+  active = linked
+  if not seated then return end
 
   outPacket.rpm = math.abs(engine.outputAV1) * 9.549296596
   -- Pedal only: BeamNG's randomized idle-controller pulses made engine-sim surge at idle

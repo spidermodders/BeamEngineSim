@@ -1,4 +1,4 @@
-# BeamEngineSim
+![BeamEngineSim](Icon/banner.png)
 
 Real engine sound in BeamNG.drive, generated live by [Engine Simulator](https://github.com/ange-yaghi/engine-sim).
 
@@ -21,16 +21,16 @@ Uninstalling puts the game's original audio plugin back and removes the mod.
 
 ## Using it
 
-EngineSim opens two windows: the simulator itself and a small settings window.
+EngineSim opens two windows: the simulator itself and a small settings window. The top of the settings window shows whether BeamNG.drive is connected and the simulator's FPS. Disconnect hands the sound back to EngineSim's own window and gives the car its stock engine sound again; Connect links it back up.
 
 | Setting | What it does |
 | --- | --- |
 | Load engine | Pick any `.mr` engine file. |
 | Simulation rate | Higher sounds cleaner but costs more CPU. 10 kHz is a good default. |
-| Engine volume | Volume of the engine inside BeamNG.drive. |
-| BeamNG keeps its own torque below | Below this rpm the car uses its stock torque, which keeps idle steady. |
-| Tune the car's engine | Reshapes the car's engine to the loaded engine. Any car, no extra mod needed. |
-| Retune BeamNG car | Measures the engine again and re-applies it, for example after switching cars. |
+| Volume in BeamNG | Volume of the engine inside BeamNG.drive. |
+| BeamNG torque below | Below this rpm the car uses its stock torque, which keeps idle steady. |
+| Tune car to this engine | Reshapes the car's engine to the loaded engine. Any car, no extra mod needed. |
+| Retune | Measures the engine again and re-applies it, for example after switching cars. |
 
 ## What gets installed
 
@@ -61,9 +61,10 @@ Pick what to build, or pass it directly: `Build.bat enginesim`, `dsp`, `mod`, `i
 | Folder | Contents |
 | --- | --- |
 | `EngineSimulator` | Fork of Engine Simulator v0.1.12a with the BeamNG bridge, plus small patches for its libraries |
-| `EngineSimulatorMod` | The BeamNG.drive mod (vehicle and game engine Lua) |
+| `EngineSimulatorMod` | The BeamNG.drive mod (vehicle Lua, sound markers, mod icon) |
 | `AudioPlugin` | The FMOD plugin that brings the audio into the game |
 | `Installer` | Inno Setup script |
+| `Icon` | Icon and README banner: SVG sources, VectorCraft projects, PNG and .ico |
 | `Dependencies` | vcpkg manifest. Build.bat downloads everything else in here |
 
 ## Credits

@@ -24,6 +24,7 @@ ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 CloseApplications=yes
 UninstallDisplayIcon={app}\bin\engine-sim-app.exe
+SetupIconFile=..\Icon\icon.ico
 DisableWelcomePage=no
 
 [Tasks]

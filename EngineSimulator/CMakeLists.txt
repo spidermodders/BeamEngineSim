@@ -209,6 +209,7 @@ add_executable(engine-sim-app WIN32
     src/engine_sim_application.cpp
     src/beam_bridge.cpp
     src/bridge_settings.cpp
+    src/engine_sim.rc
     src/geometry_generator.cpp
     src/simulation_object.cpp
     src/piston_object.cpp
