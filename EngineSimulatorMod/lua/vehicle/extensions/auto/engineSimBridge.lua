@@ -193,10 +193,10 @@ local function onExtensionLoaded()
   udp:setpeername("127.0.0.1", enginePort)
 end
 
+-- Only runs when the vehicle reloads or despawns, which rebuilds its sounds and engine anyway.
+-- Restoring blends here queued initEngineSound for sound IDs the reloaded vehicle no longer
+-- drives, leaving a stray looping engine sound.
 local function onExtensionUnloaded()
-  if active then useMarkerBlends(false) end
-  if engine and appliedProfileId then restoreStockEngine() end
-  if engine and engine.torqueUpdate == torqueUpdate then engine.torqueUpdate = origTorqueUpdate end
   if udp then udp:close() end
 end
 

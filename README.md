@@ -1,5 +1,7 @@
 ![BeamEngineSim](Icon/banner.png)
 
+[![Watch the showcase](https://img.youtube.com/vi/0cbpjeDoqT0/maxresdefault.jpg)](https://youtu.be/0cbpjeDoqT0)
+
 Real engine sound in BeamNG.drive, generated live by [Engine Simulator](https://github.com/ange-yaghi/engine-sim).
 
 Engine Simulator models every piston, valve, spark and exhaust pulse of an engine and turns that into sound. BeamEngineSim connects it to BeamNG.drive, so the car you drive sounds like the engine you loaded, and that engine also drives the car.
