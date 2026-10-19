@@ -19,9 +19,9 @@
 
 namespace {
 
-    enum { IdVolume = 101, IdIdle, IdLoad, IdEngineLabel, IdTune, IdTuneLabel, IdSimRate, IdErrorLabel, IdRetune, IdStatus, IdFps, IdConnect };
+    enum { IdVolume = 101, IdIdle, IdLoad, IdEngineLabel, IdTune, IdTuneLabel, IdSimRate, IdErrorLabel, IdRetune, IdStatus, IdFps, IdConnect, IdFpsLimit, IdFpsLimitLabel, IdFpsLimitValue };
 
-    std::atomic<int> s_volumePercent{35};
+    std::atomic<int> s_volumePercent{10};
     std::atomic<int> s_idleRpm{1100};
     std::atomic<bool> s_tune{false};
     std::atomic<int> s_simKHz{10};
@@ -31,6 +31,8 @@ namespace {
     std::atomic<bool> s_retune{false};
     std::atomic<bool> s_connect{true}, s_linked{false};
     std::atomic<int> s_fps{0};
+    std::atomic<bool> s_fpsLimitOn{false};
+    std::atomic<int> s_fpsLimit{60};
     bool s_hasPending = false;
     HWND s_engineLabel, s_errorLabel;
 
@@ -48,16 +50,20 @@ namespace {
         WritePrivateProfileStringA("bridge", "tune_beam_engine", s_tune ? "1" : "0", ini.c_str());
         WritePrivateProfileStringA("bridge", "simulation_khz", std::to_string(s_simKHz.load()).c_str(), ini.c_str());
         WritePrivateProfileStringA("bridge", "connect", s_connect ? "1" : "0", ini.c_str());
+        WritePrivateProfileStringA("bridge", "fps_limit_on", s_fpsLimitOn ? "1" : "0", ini.c_str());
+        WritePrivateProfileStringA("bridge", "fps_limit", std::to_string(s_fpsLimit.load()).c_str(), ini.c_str());
         std::lock_guard<std::mutex> lock(s_pathMutex);
         WritePrivateProfileStringA("bridge", "engine", s_currentPath.c_str(), ini.c_str());
     }
 
     void load() {
         const std::string ini = iniPath();
-        s_volumePercent = GetPrivateProfileIntA("bridge", "volume_percent", 35, ini.c_str());
+        s_volumePercent = GetPrivateProfileIntA("bridge", "volume_percent", 10, ini.c_str());
         s_idleRpm = GetPrivateProfileIntA("bridge", "beam_idle_rpm", 1100, ini.c_str());
         s_tune = GetPrivateProfileIntA("bridge", "tune_beam_engine", 0, ini.c_str()) != 0;
         s_connect = GetPrivateProfileIntA("bridge", "connect", 1, ini.c_str()) != 0;
+        s_fpsLimitOn = GetPrivateProfileIntA("bridge", "fps_limit_on", 0, ini.c_str()) != 0;
+        s_fpsLimit = GetPrivateProfileIntA("bridge", "fps_limit", 60, ini.c_str());
         s_simKHz = (std::min)((std::max)((int)GetPrivateProfileIntA("bridge", "simulation_khz", 10, ini.c_str()), 10), 20);
         char path[MAX_PATH] = "";
         GetPrivateProfileStringA("bridge", "engine", "", path, MAX_PATH, ini.c_str());
@@ -68,8 +74,8 @@ namespace {
         Connected = RGB(74, 222, 128), Waiting = RGB(255, 170, 60), Error = RGB(255, 99, 88);
     HBRUSH s_background;
     HFONT s_font, s_boldFont, s_titleFont;
-    HWND s_volumeValue, s_idleValue, s_simRateValue, s_tuneCheck, s_status, s_fpsLabel, s_connectButton;
-    const int Width = 340, Margin = 14;
+    HWND s_volumeValue, s_idleValue, s_simRateValue, s_tuneCheck, s_status, s_fpsLabel, s_connectButton, s_fpsLimitCheck, s_fpsLimitEdit;
+    const int Width = 360, Margin = 14;
 
     enum class Status { Off, Waiting, Linked };
     Status status() { return !s_connect ? Status::Off : s_linked ? Status::Linked : Status::Waiting; }
@@ -134,6 +140,15 @@ namespace {
         ofn.lpstrFile = file;
         ofn.nMaxFile = MAX_PATH;
         ofn.Flags = OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR;
+        char folder[MAX_PATH];
+        {
+            std::lock_guard<std::mutex> lock(s_pathMutex);
+            const std::string start = s_currentPath.empty()
+                ? iniPath().substr(0, iniPath().find_last_of("\\/") + 1) + "..\\assets\\engines"
+                : s_currentPath.substr(0, s_currentPath.find_last_of("\\/"));
+            GetFullPathNameA(start.c_str(), MAX_PATH, folder, nullptr);
+        }
+        ofn.lpstrInitialDir = folder;
         // engine-sim resolves engine_sim.mr and ../assets from the working dir, and
         // GetOpenFileName ignores OFN_NOCHANGEDIR, so put the working dir back ourselves
         char cwd[MAX_PATH];
@@ -152,6 +167,7 @@ namespace {
 
     LRESULT CALLBACK windowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         switch (msg) {
+        case WM_CTLCOLOREDIT:
         case WM_CTLCOLORSTATIC:
         case WM_CTLCOLORBTN: {
             const int id = GetDlgCtrlID((HWND)lParam);
@@ -185,6 +201,17 @@ namespace {
                 s_connect = !s_connect;
                 save();
                 refreshStatus();
+            }
+            else if (LOWORD(wParam) == IdFpsLimit || LOWORD(wParam) == IdFpsLimitLabel) {
+                if (LOWORD(wParam) == IdFpsLimitLabel) {
+                    SendMessageA(s_fpsLimitCheck, BM_SETCHECK, s_fpsLimitOn ? BST_UNCHECKED : BST_CHECKED, 0);
+                }
+                s_fpsLimitOn = SendMessageA(s_fpsLimitCheck, BM_GETCHECK, 0, 0) == BST_CHECKED;
+                save();
+            }
+            else if (LOWORD(wParam) == IdFpsLimitValue && HIWORD(wParam) == EN_CHANGE) {
+                s_fpsLimit = (int)GetDlgItemInt(hwnd, IdFpsLimitValue, nullptr, FALSE);
+                save();
             }
             else if (LOWORD(wParam) == IdTune || LOWORD(wParam) == IdTuneLabel) {
                 if (LOWORD(wParam) == IdTuneLabel) {
@@ -227,7 +254,7 @@ namespace {
         RegisterClassA(&wc);
 
         const DWORD style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX;
-        RECT frame = { 0, 0, Width, 262 };
+        RECT frame = { 0, 0, Width, 294 };
         AdjustWindowRectEx(&frame, style, FALSE, WS_EX_TOPMOST);
         HWND hwnd = CreateWindowExA(WS_EX_TOPMOST, wc.lpszClassName, "BeamEngineSim", style,
             40, 40, frame.right - frame.left, frame.bottom - frame.top, nullptr, nullptr, wc.hInstance, nullptr);
@@ -235,8 +262,8 @@ namespace {
         DwmSetWindowAttribute(hwnd, 20 /* DWMWA_USE_IMMERSIVE_DARK_MODE */, &dark, sizeof(dark));
 
         const int buttonW = 92, buttonH = 26;
-        s_status = makeChild(hwnd, "STATIC", "", SS_LEFTNOWORDWRAP, Margin, 15, 176, 18, IdStatus, s_boldFont);
-        s_fpsLabel = makeChild(hwnd, "STATIC", "", SS_RIGHT, Width - Margin - buttonW - 44, 15, 40, 18, IdFps, s_font);
+        s_status = makeChild(hwnd, "STATIC", "", SS_LEFTNOWORDWRAP, Margin, 15, 180, 18, IdStatus, s_boldFont);
+        s_fpsLabel = makeChild(hwnd, "STATIC", "", SS_RIGHT, Width - Margin - buttonW - 60, 15, 56, 18, IdFps, s_font);
         s_connectButton = makeButton(hwnd, "", BS_PUSHBUTTON, Width - Margin - buttonW, 11, buttonW, buttonH, IdConnect);
 
         s_engineLabel = makeChild(hwnd, "STATIC", "", SS_ENDELLIPSIS, Margin, 50, Width - 2 * Margin - buttonW - 8, 22, IdEngineLabel, s_titleFont);
@@ -255,6 +282,14 @@ namespace {
         SendMessageA(s_tuneCheck, BM_SETCHECK, s_tune ? BST_CHECKED : BST_UNCHECKED, 0);
         makeChild(hwnd, "STATIC", "Tune car to this engine", SS_NOTIFY, Margin + 26, y + 5, 170, 18, IdTuneLabel, s_font);
         makeButton(hwnd, "Retune", BS_PUSHBUTTON, Width - Margin - buttonW, y, buttonW, buttonH, IdRetune);
+        y += 32;
+        s_fpsLimitCheck = makeButton(hwnd, "", BS_AUTOCHECKBOX, Margin, y + 5, 18, 18, IdFpsLimit);
+        SendMessageA(s_fpsLimitCheck, BM_SETCHECK, s_fpsLimitOn ? BST_CHECKED : BST_UNCHECKED, 0);
+        makeChild(hwnd, "STATIC", "FPS limit", SS_NOTIFY, Margin + 26, y + 5, 60, 18, IdFpsLimitLabel, s_font);
+        s_fpsLimitEdit = makeChild(hwnd, "EDIT", std::to_string(s_fpsLimit.load()).c_str(), WS_BORDER | ES_NUMBER | ES_CENTER,
+            Margin + 90, y + 3, 50, 22, IdFpsLimitValue, s_font);
+        SendMessageA(s_fpsLimitEdit, EM_SETLIMITTEXT, 4, 0);
+        SetWindowTheme(s_fpsLimitEdit, L"DarkMode_CFD", nullptr);
 
         refreshLabels();
         refreshStatus();
@@ -319,6 +354,8 @@ void bridgeSettingsSetLoadError(const std::string &message) {
 bool bridgeSettingsTakeRetune() { return s_retune.exchange(false); }
 
 bool bridgeSettingsConnect() { return s_connect; }
+
+int bridgeSettingsFpsLimit() { return s_fpsLimitOn ? (std::min)((std::max)(s_fpsLimit.load(), 10), 1000) : 0; }
 
 void bridgeSettingsReport(bool linked, float fps) {
     s_linked = linked;

@@ -398,7 +398,6 @@ void EngineSimApplication::run() {
             m_simThread = std::thread(&EngineSimApplication::simulationThread, this);
         }
         std::unique_lock<std::mutex> simLock(m_simMutex);
-        bridgeSettingsReport(m_bridgeActive, m_engine.GetAverageFramerate());
 
         if (m_engine.ProcessKeyDown(ysKey::Code::Return) || bridgeSettingsTakeEnginePath(&m_scriptPath)) {
             m_audioSource->SetMode(ysAudioSource::Mode::Stop);
@@ -1066,11 +1065,26 @@ void EngineSimApplication::simulationThread() {
     using clock = std::chrono::steady_clock;
     SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_ABOVE_NORMAL);
     auto last = clock::now();
+    float frameTime = 0.005f;
+    auto next = clock::now();
     while (m_simRunning) {
-        Sleep(4);
+        const int limit = bridgeSettingsFpsLimit();
+        if (limit > 0) {
+            next = (std::max)(next + std::chrono::microseconds(1000000 / limit), clock::now() - std::chrono::milliseconds(50));
+            while (clock::now() < next) {
+                const auto left = std::chrono::duration_cast<std::chrono::milliseconds>(next - clock::now()).count();
+                Sleep(left > 1 ? (DWORD)(left - 1) : 0);
+            }
+        }
+        else {
+            Sleep(4);
+            next = clock::now();
+        }
         const auto now = clock::now();
         const float dt = std::chrono::duration<float>(now - last).count();
         last = now;
+        frameTime += 0.05f * (dt - frameTime);
+        bridgeSettingsReport(m_bridgeActive, 1 / frameTime);
 
         std::lock_guard<std::mutex> lock(m_simMutex);
         if (m_simulator == nullptr || m_iceEngine == nullptr || m_simulator->getEngine() == nullptr) continue;

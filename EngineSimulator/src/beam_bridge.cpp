@@ -13,7 +13,7 @@
 #include <timeapi.h>
 
 // Wire format, little-endian:
-//   BeamNG -> engine-sim: "BES1" + 5 floats (BeamBridgeInput order)
+//   BeamNG -> engine-sim: "BES1" + 5 floats (BeamBridgeInput order), "BESH" heartbeat while paused
 //   engine-sim -> BeamNG: "BES1" + float torqueNm + float rpm ("BESN": keep BeamNG torque)
 //                         "BESP" + engine profile floats, about twice a second
 
@@ -37,6 +37,13 @@ static void receiverThread() {
         sockaddr_in from;
         int fromLength = sizeof(from);
         const int n = recvfrom(s_socket, buffer, sizeof(buffer), 0, (sockaddr *)&from, &fromLength);
+        if (n == 4 && std::memcmp(buffer, "BESH", 4) == 0) {
+            // Paused game: keep a live link alive, never start one
+            std::lock_guard<std::mutex> lock(s_inMutex);
+            const double now = nowSeconds();
+            if (s_latestTime >= 0 && now - s_latestTime < 0.5) s_latestTime = now;
+            continue;
+        }
         if (n != 4 + (int)sizeof(BeamBridgeInput) || std::memcmp(buffer, "BES1", 4) != 0) continue; // junk, or WSAECONNRESET
 
         BeamBridgeInput in;
