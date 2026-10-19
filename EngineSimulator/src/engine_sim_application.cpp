@@ -1111,6 +1111,7 @@ void EngineSimApplication::processBeamBridge(float dt) {
             postLogMessage("BEAMNG BRIDGE DISCONNECTED");
         }
         m_bridgeActive = false;
+        bridgeSettingsSetTuning(false);
         return;
     }
 
@@ -1128,6 +1129,7 @@ void EngineSimApplication::processBeamBridge(float dt) {
     }
 
     const bool sweeping = bridgeSettingsTuneBeamEngine() && !m_profileValid;
+    bridgeSettingsSetTuning(sweeping);
     double targetRpm = smoothRpm, throttle = m_bridgeIn.throttle;
     if (sweeping) runBeamProfileSweep(dt, &targetRpm, &throttle);
 

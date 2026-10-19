@@ -15,6 +15,7 @@ bool bridgeSettingsTakeRetune();
 void bridgeSettingsSetLoadError(const std::string &message);
 void bridgeSettingsSetEnginePath(const std::string &path);
 bool bridgeSettingsConnect();
+void bridgeSettingsSetTuning(bool tuning);
 int bridgeSettingsFpsLimit();
 void bridgeSettingsReport(bool linked, float fps);
 void bridgeSettingsSetAppIcon();

@@ -29,7 +29,8 @@ namespace {
     std::mutex s_pathMutex;
     std::string s_pendingPath, s_currentPath, s_loadError;
     std::atomic<bool> s_retune{false};
-    std::atomic<bool> s_connect{true}, s_linked{false};
+    std::atomic<bool> s_connect{true}, s_linked{false}, s_tuning{false};
+    bool s_shownTuning = false;
     std::atomic<int> s_fps{0};
     std::atomic<bool> s_fpsLimitOn{false};
     std::atomic<int> s_fpsLimit{60};
@@ -101,7 +102,7 @@ namespace {
         SetWindowTextA(s_idleValue, s_idleRpm.load() == 0 ? "off" : (std::to_string(s_idleRpm.load()) + " rpm").c_str());
         std::lock_guard<std::mutex> lock(s_pathMutex);
         const std::string name = s_currentPath.empty() ? "assets/main.mr" : s_currentPath.substr(s_currentPath.find_last_of("\\/") + 1);
-        SetWindowTextA(s_engineLabel, name.c_str());
+        SetWindowTextA(s_engineLabel, (s_tuning ? name + " (Tuning...)" : name).c_str());
         SetWindowTextA(s_errorLabel, s_loadError.c_str());
     }
 
@@ -172,7 +173,7 @@ namespace {
         case WM_CTLCOLORBTN: {
             const int id = GetDlgCtrlID((HWND)lParam);
             const COLORREF statusColors[] = { Muted, Waiting, Connected };
-            SetTextColor((HDC)wParam, id == IdStatus ? statusColors[(int)status()] : id == IdFps ? Muted : id == IdErrorLabel ? Error : Text);
+            SetTextColor((HDC)wParam, id == IdStatus ? statusColors[(int)status()] : id == IdFps ? Muted : id == IdErrorLabel ? Error : id == IdEngineLabel && s_tuning ? Waiting : Text);
             SetBkColor((HDC)wParam, Background);
             return (LRESULT)s_background;
         }
@@ -222,6 +223,10 @@ namespace {
             }
             return 0;
         case WM_TIMER:
+            if (s_tuning != s_shownTuning) {
+                s_shownTuning = s_tuning;
+                refreshLabels();
+            }
             refreshStatus();
             return 0;
         case WM_CLOSE:
@@ -354,6 +359,8 @@ void bridgeSettingsSetLoadError(const std::string &message) {
 bool bridgeSettingsTakeRetune() { return s_retune.exchange(false); }
 
 bool bridgeSettingsConnect() { return s_connect; }
+
+void bridgeSettingsSetTuning(bool tuning) { s_tuning = tuning; }
 
 int bridgeSettingsFpsLimit() { return s_fpsLimitOn ? (std::min)((std::max)(s_fpsLimit.load(), 10), 1000) : 0; }
 
