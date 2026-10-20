@@ -54,6 +54,7 @@ class GasSystem {
         double react(double n, const Mix &mix);
         static double flowConstant(double flowRate, double P, double pressureDrop, double T, double hcr);
         static double k_28inH2O(double flowRateScfm);
+        static double k_32inH2O(double flowRateScfm);
         static double k_carb(double flowRateScfm);
         static double flowRate(
             double k_flow,

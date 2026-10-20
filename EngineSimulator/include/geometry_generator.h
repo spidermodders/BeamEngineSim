@@ -182,6 +182,18 @@ public:
     bool generateIsoscelesTriangle(
         float x, float y, float width, float height);
 
+    bool generateWankelHousing(
+        const Function *profile,
+        float center_x,
+        float center_y,
+        float width,
+        float startAngle,
+        float endAngle,
+        int segmentCount);
+
+    bool generateWankelRotor(
+        const Function *flankProfile, float angleOffset);
+
     bool startPath(PathParameters &params);
     bool generatePathSegment(PathParameters &params, bool detached = false);
 

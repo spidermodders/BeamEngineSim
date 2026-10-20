@@ -15,6 +15,7 @@ Crankshaft::Crankshaft() {
     m_p_x = m_p_y = 0.0;
     m_tdc = 0.0;
     m_frictionTorque = 0.0;
+    m_cycleAngle = 4 * constants::pi;
 }
 
 Crankshaft::~Crankshaft() {
@@ -32,6 +33,7 @@ void Crankshaft::initialize(const Parameters &params) {
     m_p_y = params.pos_y;
     m_tdc = params.tdc;
     m_frictionTorque = params.frictionTorque;
+    m_cycleAngle = params.cycleAngle;
 }
 
 void Crankshaft::destroy() {
@@ -51,12 +53,13 @@ void Crankshaft::getRodJournalPositionGlobal(int i, double *x, double *y) {
     double lx, ly;
     getRodJournalPositionLocal(i, &lx, &ly);
 
-    *x = lx + m_body.p_x;
-    *y = ly + m_body.p_y;
+    const double c = std::cos(m_body.theta), s = std::sin(m_body.theta);
+    *x = c * lx - s * ly + m_body.p_x;
+    *y = s * lx + c * ly + m_body.p_y;
 }
 
 void Crankshaft::resetAngle() {
-    m_body.theta = std::fmod(m_body.theta, 4 * constants::pi);
+    m_body.theta = std::fmod(m_body.theta, m_cycleAngle);
 }
 
 void Crankshaft::setRodJournalAngle(int i, double angle) {
@@ -70,8 +73,8 @@ double Crankshaft::getAngle() const {
 }
 
 double Crankshaft::getCycleAngle(double offset) {
-    const double wrapped = std::fmod(-getAngle() + offset, 4 * constants::pi);
+    const double wrapped = std::fmod(-getAngle() + offset, m_cycleAngle);
     return (wrapped < 0)
-        ? wrapped + 4 * constants::pi
+        ? wrapped + m_cycleAngle
         : wrapped;
 }

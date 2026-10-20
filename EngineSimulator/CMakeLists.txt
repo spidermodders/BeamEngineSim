@@ -87,6 +87,12 @@ add_library(engine-sim STATIC
     src/vehicle.cpp
     src/vehicle_drag_constraint.cpp
     src/vtec_valvetrain.cpp
+    src/wankel_combustion_chamber.cpp
+    src/wankel_engine.cpp
+    src/wankel_engine_simulator.cpp
+    src/wankel_pinion_constraint.cpp
+    src/wankel_rotor.cpp
+    src/wankel_rotor_housing.cpp
 
     # Include files
     include/audio_buffer.h
@@ -132,6 +138,12 @@ add_library(engine-sim STATIC
     include/vehicle.h
     include/vehicle_drag_constraint.h
     include/vtec_valvetrain.h
+    include/wankel_combustion_chamber.h
+    include/wankel_engine.h
+    include/wankel_engine_simulator.h
+    include/wankel_pinion_constraint.h
+    include/wankel_rotor.h
+    include/wankel_rotor_housing.h
 )
 
 target_link_libraries(engine-sim
@@ -180,6 +192,9 @@ if (PIRANHA_ENABLED)
         scripting/include/transmission_node.h
         scripting/include/valvetrain_node.h
         scripting/include/vtec_valvetrain_node.h
+        scripting/include/wankel_engine_node.h
+        scripting/include/wankel_peripheral_port_node.h
+        scripting/include/wankel_rotor_node.h
 		scripting/include/vehicle_node.h
     )
 
@@ -240,6 +255,7 @@ add_executable(engine-sim-app WIN32
     src/load_simulation_cluster.cpp
     src/mixer_cluster.cpp
     src/info_cluster.cpp
+    src/wankel_rotor_object.cpp
 
     # Include files
     include/delta.h
@@ -275,6 +291,7 @@ add_executable(engine-sim-app WIN32
     include/load_simulation_cluster.h
     include/mixer_cluster.h
     include/info_cluster.h
+    include/wankel_rotor_object.h
 )
 
 target_link_libraries(engine-sim-app

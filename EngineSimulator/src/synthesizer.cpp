@@ -96,6 +96,13 @@ void Synthesizer::initializeImpulseResponse(
         }
     }
 
+    // Missing or silent impulse file: pass the exhaust sound through dry
+    if (clippedLength == 0) {
+        m_filters[index].convolution.initialize(1);
+        m_filters[index].convolution.getImpulseResponse()[0] = volume;
+        return;
+    }
+
     const unsigned int sampleCount = std::min(10000U, clippedLength);
     m_filters[index].convolution.initialize(sampleCount);
     for (unsigned int i = 0; i < sampleCount; ++i) {

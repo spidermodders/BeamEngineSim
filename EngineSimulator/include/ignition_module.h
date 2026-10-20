@@ -7,6 +7,8 @@
 #include "function.h"
 #include "units.h"
 
+#include <vector>
+
 class IgnitionModule : public Part {
     public:
         struct Parameters {
@@ -17,10 +19,10 @@ class IgnitionModule : public Part {
             double limiterDuration = 0.5 * units::sec;
         };
 
+        // One per wire connection; a rotary fires its rotor's wire three times per cycle
         struct SparkPlug {
             double angle = 0;
-            bool ignitionEvent = false;
-            bool enabled = false;
+            int cylinder = 0;
         };
 
     public:
@@ -43,10 +45,9 @@ class IgnitionModule : public Part {
         bool m_enabled;
 
     protected:
-        SparkPlug *getPlug(int i);
-
         Function *m_timingCurve;
-        SparkPlug *m_plugs;
+        std::vector<SparkPlug> m_plugs;
+        bool *m_ignitionEvents;
         Crankshaft *m_crankshaft;
         int m_cylinderCount;
 

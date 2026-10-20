@@ -9,6 +9,8 @@
 #include "../include/cylinder_head_object.h"
 #include "../include/ui_button.h"
 #include "../include/combustion_chamber_object.h"
+#include "../include/wankel_rotor_object.h"
+#include "../include/wankel_engine.h"
 #include "../include/csv_io.h"
 #include "../include/exhaust_system.h"
 #include "../include/feedback_comb_filter.h"
@@ -647,6 +649,15 @@ void EngineSimApplication::createObjects(Engine *engine) {
         crankshaftObject->initialize(this);
         crankshaftObject->m_crankshaft = engine->getCrankshaft(i);
         m_objects.push_back(crankshaftObject);
+    }
+
+    WankelEngine *wankel = dynamic_cast<WankelEngine *>(engine);
+    for (int i = 0; wankel != nullptr && i < wankel->getRotorCount(); ++i) {
+        WankelRotorObject *rotorObject = new WankelRotorObject;
+        rotorObject->initialize(this);
+        rotorObject->m_rotor = wankel->getRotor(i);
+        rotorObject->m_housing = wankel->getHousing(i);
+        m_objects.push_back(rotorObject);
     }
 
     for (int i = 0; i < engine->getCylinderBankCount(); ++i) {

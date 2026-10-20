@@ -24,6 +24,10 @@ namespace es_script {
             m_connections.insert({ bank, i });
         }
 
+        void connectRotor(int rotor) {
+            m_connections.insert({ nullptr, rotor });
+        }
+
         std::set<Connection> getConnections() const {
             return m_connections;
         }

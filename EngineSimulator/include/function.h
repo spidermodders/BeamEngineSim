@@ -20,11 +20,16 @@ class Function {
         void addSample(double x, double y);
 
         double sampleTriangle(double x) const;
+        double sampleLinear(double x) const;
         double sampleGaussian(double x) const;
         double triangle(double x) const;
         int closestSample(double x) const;
 
         bool isOrdered() const;
+
+        inline int getSampleCount() const { return m_size; }
+        inline double getSampleX(int i) const { return m_x[i]; }
+        inline double getSampleY(int i) const { return m_y[i]; }
 
         void getDomain(double *x0, double *x1);
         void getRange(double *y0, double *y1);

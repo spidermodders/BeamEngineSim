@@ -74,6 +74,10 @@ void es_script::LanguageRules::registerBuiltinNodeTypes() {
         "__engine_sim__transmission_channel", &es_script::ObjectChannel::TransmissionChannel);
     registerBuiltinType<piranha::ChannelNode>(
         "__engine_sim__throttle_channel", &es_script::ObjectChannel::ThrottleChannel);
+    registerBuiltinType<piranha::ChannelNode>(
+        "__engine_sim__wankel_rotor_channel", &es_script::ObjectChannel::WankelRotorChannel);
+    registerBuiltinType<piranha::ChannelNode>(
+        "__engine_sim__wankel_peripheral_port_channel", &es_script::ObjectChannel::WankelPeripheralPortChannel);
 
     // Literals
     registerBuiltinType<piranha::DefaultLiteralFloatNode>(
@@ -140,7 +144,9 @@ void es_script::LanguageRules::registerBuiltinNodeTypes() {
     registerBuiltinType<SetCylinderHeadNode>("__engine_sim__set_cylinder_head");
     registerBuiltinType<ConnectIgnitionWireNode>("__engine_sim__connect_ignition_wire");
     registerBuiltinType<AddIgnitionModuleNode>("__engine_sim__add_ignition_module");
+    registerBuiltinType<AddRotorNode>("__engine_sim__add_rotor");
     registerBuiltinType<k_28inH2ONode>("__engine_sim__k_28inH2O");
+    registerBuiltinType<k_32inH2ONode>("__engine_sim__k_32inH2O");
     registerBuiltinType<k_CarbNode>("__engine_sim__k_carb");
     registerBuiltinType<GenerateHarmonicCamLobeNode>("__engine_sim__generate_harmonic_cam_lobe");
     registerBuiltinType<SetApplicationSettingsNode>("__engine_sim__set_application_settings");
@@ -170,6 +176,9 @@ void es_script::LanguageRules::registerBuiltinNodeTypes() {
     registerBuiltinType<TransmissionNode>("__engine_sim__transmission");
     registerBuiltinType<DirectThrottleLinkageNode>("__engine_sim__direct_throttle_linkage");
     registerBuiltinType<GovernorNode>("__engine_sim__governor");
+    registerBuiltinType<WankelEngineNode>("__engine_sim__wankel_engine");
+    registerBuiltinType<WankelRotorNode>("__engine_sim__wankel_rotor");
+    registerBuiltinType<WankelPeripheralPortNode>("__engine_sim__wankel_peripheral_port");
 
     // String operations
     registerBuiltinType<piranha::OperationNodeSpecialized<

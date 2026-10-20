@@ -22,7 +22,9 @@ namespace es_script {
         EngineNode() { /* void */ }
         virtual ~EngineNode() { /* void */ }
 
-        void buildEngine(Engine *engine) {
+        virtual Engine *buildEngine() {
+            Engine *engine = new Engine;
+
             int cylinderCount = 0;
             for (const CylinderBankNode *bank : m_cylinderBanks) {
                 cylinderCount += bank->getCylinderCount();
@@ -105,7 +107,7 @@ namespace es_script {
                 m_cylinderBanks[i]->connectRodAssemblies(&context);
             }
 
-            m_ignitionModule->generate(engine, &context);
+            m_ignitionModule->generate(engine, engine->getCylinderCount(), &context);
             
             Function *meanPistonSpeedToTurbulence = new Function;
             meanPistonSpeedToTurbulence->initialize(30, 1);
@@ -129,6 +131,8 @@ namespace es_script {
                 ccParams.Head = engine->getHead(ccParams.Piston->getCylinderBank()->getIndex());
                 engine->getChamber(i)->initialize(ccParams);
             }
+
+            return engine;
         }
 
         void addCrankshaft(CrankshaftNode *crankshaft) {

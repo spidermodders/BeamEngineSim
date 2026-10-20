@@ -113,6 +113,55 @@ private node _add_sample => __engine_sim__add_sample {
     input function [function];
 }
 
+private node _add_rotor => __engine_sim__add_rotor {
+    input rotor [wankel_rotor];
+    input rod_journal [rod_journal];
+    input exhaust_system [exhaust_system];
+    input intake [intake];
+    input ignition_wire [ignition_wire];
+    input sound_attenuation [float];
+    input primary_length [float];
+    input engine [engine];
+    input intake_port [wankel_peripheral_port];
+    input exhaust_port [wankel_peripheral_port];
+    input intake_runner_cross_section_area [float];
+    input exhaust_cross_section_area [float];
+    input spark_plug_angle [float];
+}
+
+public node add_rotor {
+    input intake;
+    input exhaust_system;
+    input rotor;
+    input rod_journal;
+    input ignition_wire;
+    input sound_attenuation: 1.0;
+    input primary_length: 0.0;
+    input intake_port;
+    input exhaust_port;
+    input intake_runner_cross_section_area;
+    input exhaust_cross_section_area;
+    input spark_plug_angle;
+    input this;
+    alias output __out: this;
+
+    _add_rotor(
+        rotor: rotor,
+        rod_journal: rod_journal,
+        exhaust_system: exhaust_system,
+        intake: intake,
+        ignition_wire: ignition_wire,
+        engine: this,
+        sound_attenuation: sound_attenuation,
+        primary_length: primary_length,
+        intake_port: intake_port,
+        exhaust_port: exhaust_port,
+        intake_runner_cross_section_area: intake_runner_cross_section_area,
+        exhaust_cross_section_area: exhaust_cross_section_area,
+        spark_plug_angle: spark_plug_angle
+    )
+}
+
 public node add_sample {
     input x;
     input y;
@@ -148,6 +197,11 @@ public node set_cylinder_head {
 }
 
 public node k_28inH2O => __engine_sim__k_28inH2O {
+    input flow [float]: 1.0;
+    alias output __out [float];
+}
+
+public node k_32inH2O => __engine_sim__k_32inH2O {
     input flow [float]: 1.0;
     alias output __out [float];
 }

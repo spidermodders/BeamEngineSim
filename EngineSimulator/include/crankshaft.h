@@ -14,6 +14,7 @@ class Crankshaft : public Part {
             double pos_y = 0;
             double tdc = 0;
             double frictionTorque = 0;
+            double cycleAngle = 4 * 3.14159265358979323846;
             int rodJournals;
         };
 
@@ -42,6 +43,7 @@ class Crankshaft : public Part {
         inline double getPosX() const { return m_p_x; }
         inline double getPosY() const { return m_p_y; }
         inline double getFrictionTorque() const { return m_frictionTorque; }
+        inline double getCycleLength() const { return m_cycleAngle; }
 
     protected:
         double *m_rodJournalAngles;
@@ -55,6 +57,7 @@ class Crankshaft : public Part {
         double m_p_x;
         double m_p_y;
         double m_frictionTorque;
+        double m_cycleAngle;
 };
 
 #endif /* ATG_ENGINE_SIM_CRANKSHAFT_H */

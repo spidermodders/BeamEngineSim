@@ -7,7 +7,7 @@
 #include <cmath>
 
 IgnitionModule::IgnitionModule() {
-    m_plugs = nullptr;
+    m_ignitionEvents = nullptr;
     m_crankshaft = nullptr;
     m_timingCurve = nullptr;
     m_cylinderCount = 0;
@@ -19,19 +19,20 @@ IgnitionModule::IgnitionModule() {
 }
 
 IgnitionModule::~IgnitionModule() {
-    assert(m_plugs == nullptr);
+    assert(m_ignitionEvents == nullptr);
 }
 
 void IgnitionModule::destroy() {
-    delete[] m_plugs;
+    delete[] m_ignitionEvents;
 
-    m_plugs = nullptr;
+    m_ignitionEvents = nullptr;
+    m_plugs.clear();
     m_cylinderCount = 0;
 }
 
 void IgnitionModule::initialize(const Parameters &params) {
     m_cylinderCount = params.cylinderCount;
-    m_plugs = new SparkPlug[m_cylinderCount];
+    m_ignitionEvents = new bool[m_cylinderCount]();
     m_crankshaft = params.crankshaft;
     m_timingCurve = params.timingCurve;
     m_revLimit = params.revLimit;
@@ -41,8 +42,7 @@ void IgnitionModule::initialize(const Parameters &params) {
 void IgnitionModule::setFiringOrder(int cylinderIndex, double angle) {
     assert(cylinderIndex < m_cylinderCount);
 
-    m_plugs[cylinderIndex].angle = angle;
-    m_plugs[cylinderIndex].enabled = true;
+    m_plugs.push_back({ angle, cylinderIndex });
 }
 
 void IgnitionModule::reset() {
@@ -54,11 +54,11 @@ void IgnitionModule::update(double dt) {
     const double cycleAngle = m_crankshaft->getCycleAngle();
 
     if (m_enabled && m_revLimitTimer == 0) {
-        const double fourPi = 4 * constants::pi;
+        const double fourPi = m_crankshaft->getCycleLength();
         const double advance = getTimingAdvance();
 
-        for (int i = 0; i < m_cylinderCount; ++i) {
-            double adjustedAngle = positiveMod(m_plugs[i].angle - advance, fourPi);
+        for (const SparkPlug &plug : m_plugs) {
+            double adjustedAngle = positiveMod(plug.angle - advance, fourPi);
             const double r0 = m_lastCrankshaftAngle;
             double r1 = cycleAngle;
 
@@ -69,7 +69,7 @@ void IgnitionModule::update(double dt) {
                 }
 
                 if (adjustedAngle >= r0 && adjustedAngle < r1) {
-                    m_plugs[i].ignitionEvent = m_plugs[i].enabled;
+                    m_ignitionEvents[plug.cylinder] = true;
                 }
             }
             else {
@@ -79,7 +79,7 @@ void IgnitionModule::update(double dt) {
                 }
 
                 if (adjustedAngle >= r1 && adjustedAngle < r0) {
-                    m_plugs[i].ignitionEvent = m_plugs[i].enabled;
+                    m_ignitionEvents[plug.cylinder] = true;
                 }
             }
         }
@@ -98,12 +98,12 @@ void IgnitionModule::update(double dt) {
 }
 
 bool IgnitionModule::getIgnitionEvent(int index) const {
-    return m_plugs[index].ignitionEvent;
+    return m_ignitionEvents[index];
 }
 
 void IgnitionModule::resetIgnitionEvents() {
     for (int i = 0; i < m_cylinderCount; ++i) {
-        m_plugs[i].ignitionEvent = false;
+        m_ignitionEvents[i] = false;
     }
 }
 
@@ -111,6 +111,3 @@ double IgnitionModule::getTimingAdvance() {
     return m_timingCurve->sampleTriangle(-m_crankshaft->m_body.v_theta);
 }
 
-IgnitionModule::SparkPlug *IgnitionModule::getPlug(int i) {
-    return &m_plugs[((i % m_cylinderCount) + m_cylinderCount) % m_cylinderCount];
-}

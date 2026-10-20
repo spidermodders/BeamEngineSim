@@ -16,6 +16,7 @@
 #include "ignition_module_node.h"
 #include "transmission_node.h"
 #include "vehicle_node.h"
+#include "wankel_engine_node.h"
 
 namespace es_script {
 
@@ -31,10 +32,7 @@ namespace es_script {
 
         virtual void _evaluate() {
             EngineNode *engineNode = getObject<EngineNode>(m_engineInput);
-
-            Engine *engine = new Engine;
-            engineNode->buildEngine(engine);
-            Compiler::output()->engine = engine;
+            Compiler::output()->engine = engineNode->buildEngine();
         }
 
     protected:
@@ -184,6 +182,45 @@ namespace es_script {
         double m_soundAttenuation = 1.0;
     };
 
+    class AddRotorNode : public Node {
+    public:
+        AddRotorNode() { /* void */ }
+        virtual ~AddRotorNode() { /* void */ }
+
+    protected:
+        virtual void registerInputs() {
+            addInput("engine", &m_engine, InputTarget::Type::Object);
+            addInput("rotor", &m_rotor.rotor, InputTarget::Type::Object);
+            addInput("rod_journal", &m_rotor.rodJournal, InputTarget::Type::Object);
+            addInput("intake", &m_rotor.intake, InputTarget::Type::Object);
+            addInput("exhaust_system", &m_rotor.exhaust, InputTarget::Type::Object);
+            addInput("intake_port", &m_rotor.intakePort, InputTarget::Type::Object);
+            addInput("exhaust_port", &m_rotor.exhaustPort, InputTarget::Type::Object);
+            addInput("ignition_wire", &m_ignitionWire, InputTarget::Type::Object);
+            addInput("sound_attenuation", &m_rotor.soundAttenuation);
+            addInput("primary_length", &m_rotor.primaryLength);
+            addInput("intake_runner_cross_section_area", &m_rotor.intakeRunnerCrossSectionArea);
+            addInput("exhaust_cross_section_area", &m_rotor.exhaustCrossSectionArea);
+            addInput("spark_plug_angle", &m_rotor.sparkPlugAngle);
+
+            Node::registerInputs();
+        }
+
+        virtual void _evaluate() {
+            readAllInputs();
+
+            WankelEngineNode *engine = dynamic_cast<WankelEngineNode *>(m_engine);
+            if (engine == nullptr) return;
+
+            m_ignitionWire->connectRotor(engine->addRotor(m_rotor));
+        }
+
+    protected:
+        EngineNode *m_engine = nullptr;
+        IgnitionWireNode *m_ignitionWire = nullptr;
+        WankelEngineNode::Rotor m_rotor = {};
+    };
+
     class AddSampleNode : public Node {
     public:
         AddSampleNode() { /* void */ }
@@ -315,6 +352,56 @@ namespace es_script {
 
     protected:
         k_28inH2ONodeOutput m_output;
+        double m_flowInput = 0.0;
+    };
+
+    class k_32inH2ONode : public Node {
+        class k_32inH2ONodeOutput : public piranha::NodeOutput {
+        public:
+            k_32inH2ONodeOutput() : NodeOutput(&piranha::FundamentalType::FloatType) {
+                m_input = 0.0;
+            }
+
+            virtual ~k_32inH2ONodeOutput() {
+                /* void */
+            }
+
+            virtual void fullCompute(void *target) const {
+                *reinterpret_cast<double *>(target) = GasSystem::k_32inH2O(m_input);
+            }
+
+            double getInput() const { return m_input; }
+            void setInput(double data) { m_input = data; }
+
+        protected:
+            double m_input;
+        };
+
+    public:
+        k_32inH2ONode() { /* void */ }
+        virtual ~k_32inH2ONode() { /* void */ }
+
+    protected:
+        virtual void registerInputs() {
+            addInput("flow", &m_flowInput);
+
+            Node::registerInputs();
+        }
+
+        virtual void registerOutputs() {
+            registerOutput(&m_output, "__out");
+
+            setPrimaryOutput("__out");
+        }
+
+        virtual void _evaluate() {
+            readAllInputs();
+
+            m_output.setInput(m_flowInput);
+        }
+
+    protected:
+        k_32inH2ONodeOutput m_output;
         double m_flowInput = 0.0;
     };
 

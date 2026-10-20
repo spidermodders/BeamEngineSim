@@ -25,6 +25,8 @@ namespace es_script {
         static const piranha::ChannelType VehicleChannel;
         static const piranha::ChannelType TransmissionChannel;
         static const piranha::ChannelType ThrottleChannel;
+        static const piranha::ChannelType WankelRotorChannel;
+        static const piranha::ChannelType WankelPeripheralPortChannel;
     };
 
     template <typename Type>
@@ -59,6 +61,8 @@ namespace es_script {
     ASSIGN_CHANNEL_TYPE(VehicleNode, VehicleChannel);
     ASSIGN_CHANNEL_TYPE(TransmissionNode, VehicleChannel);
     ASSIGN_CHANNEL_TYPE(ThrottleNode, ThrottleChannel);
+    ASSIGN_CHANNEL_TYPE(WankelRotorNode, WankelRotorChannel);
+    ASSIGN_CHANNEL_TYPE(WankelPeripheralPortNode, WankelPeripheralPortChannel);
 
 } /* namespace es_script */
 

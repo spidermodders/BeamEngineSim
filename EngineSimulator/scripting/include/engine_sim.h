@@ -18,5 +18,6 @@
 #include "../../include/throttle.h"
 #include "../../include/direct_throttle_linkage.h"
 #include "../../include/governor.h"
+#include "../../include/wankel_engine.h"
 
 #endif /* ATG_ENGINE_SIM_ENGINE_SIM_H */

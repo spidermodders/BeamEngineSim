@@ -1,5 +1,7 @@
 #include "../include/geometry_generator.h"
 
+#include "../include/utilities.h"
+
 GeometryGenerator::GeometryGenerator() {
     m_vertexData = nullptr;
     m_indexData = nullptr;
@@ -827,6 +829,81 @@ bool GeometryGenerator::generateIsoscelesTriangle(
     vertex->TexCoord = ysVector2(1.0f, 0.0f);
 
     writeFace(0, 1, 2);
+
+    return true;
+}
+
+bool GeometryGenerator::generateWankelHousing(
+    const Function *profile,
+    float center_x,
+    float center_y,
+    float width,
+    float startAngle,
+    float endAngle,
+    int segmentCount)
+{
+    startSubshape();
+
+    if (!checkCapacity((segmentCount + 1) * 2, segmentCount * 6)) {
+        return false;
+    }
+
+    const float angleStep = (endAngle - startAngle) / segmentCount;
+    for (int i = 0; i <= segmentCount; ++i) {
+        const float angle = startAngle + i * angleStep;
+        const float r = (float)profile->sampleLinear(positiveMod(angle, ysMath::Constants::TWO_PI));
+        const float x = std::cosf(angle);
+        const float y = std::sinf(angle);
+
+        dbasic::Vertex *innerVertex = writeVertex();
+        innerVertex->Normal = ysMath::Constants::ZAxis;
+        innerVertex->Pos = ysMath::LoadVector(x * r + center_x, y * r + center_y, 0.0f, 1.0f);
+        innerVertex->TexCoord = ysVector2(0.0f, 0.0f);
+
+        dbasic::Vertex *outerVertex = writeVertex();
+        outerVertex->Normal = ysMath::Constants::ZAxis;
+        outerVertex->Pos = ysMath::LoadVector(x * (r + width) + center_x, y * (r + width) + center_y, 0.0f, 1.0f);
+        outerVertex->TexCoord = ysVector2(0.0f, 0.0f);
+    }
+
+    for (int i = 0; i < segmentCount; ++i) {
+        writeFace(i * 2, i * 2 + 3, i * 2 + 2);
+        writeFace(i * 2, i * 2 + 1, i * 2 + 3);
+    }
+
+    return true;
+}
+
+bool GeometryGenerator::generateWankelRotor(const Function *flankProfile, float angleOffset) {
+    startSubshape();
+
+    const int n = flankProfile->getSampleCount();
+    const int outlineCount = n * 3;
+    if (!checkCapacity(outlineCount + 1, outlineCount * 3)) {
+        return false;
+    }
+
+    dbasic::Vertex *centerVertex = writeVertex();
+    centerVertex->Normal = ysMath::Constants::ZAxis;
+    centerVertex->Pos = ysMath::LoadVector(0.0f, 0.0f, 0.0f, 1.0f);
+    centerVertex->TexCoord = ysVector2(0.5f, 0.5f);
+
+    for (int flank = 0; flank < 3; ++flank) {
+        const float apexAngle = angleOffset + flank * ysMath::Constants::TWO_PI / 3;
+        for (int i = 0; i < n; ++i) {
+            const float angle = apexAngle + (float)flankProfile->getSampleX(i);
+            const float r = (float)flankProfile->getSampleY(i);
+
+            dbasic::Vertex *vertex = writeVertex();
+            vertex->Normal = ysMath::Constants::ZAxis;
+            vertex->Pos = ysMath::LoadVector(std::cosf(angle) * r, std::sinf(angle) * r, 0.0f, 1.0f);
+            vertex->TexCoord = ysVector2(0.0f, 0.0f);
+        }
+    }
+
+    for (int i = 0; i < outlineCount; ++i) {
+        writeFace(0, i + 1, (i + 1) % outlineCount + 1);
+    }
 
     return true;
 }

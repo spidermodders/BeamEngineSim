@@ -101,6 +101,20 @@ void Function::addSample(double x, double y) {
     m_y[index] = y;
 }
 
+double Function::sampleLinear(double x) const {
+    x *= m_inputScale;
+
+    if (m_size == 0) return 0;
+    else if (x >= m_x[m_size - 1]) return m_y[m_size - 1] * m_outputScale;
+    else if (x <= m_x[0]) return m_y[0] * m_outputScale;
+
+    int i = closestSample(x);
+    if (m_x[i] > x) --i;
+
+    const double s = (x - m_x[i]) / (m_x[i + 1] - m_x[i]);
+    return ((1 - s) * m_y[i] + s * m_y[i + 1]) * m_outputScale;
+}
+
 double Function::sampleTriangle(double x) const {
     x *= m_inputScale;
     const int closest = closestSample(x);

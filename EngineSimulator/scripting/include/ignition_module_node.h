@@ -23,13 +23,12 @@ namespace es_script {
         IgnitionModuleNode() { /* void */ }
         virtual ~IgnitionModuleNode() { /* void */ }
 
-        void generate(Engine *engine, EngineContext *context) const {
+        void generate(Engine *engine, int chamberCount, EngineContext *context) const {
             IgnitionModule::Parameters params;
             params.crankshaft = engine->getCrankshaft(0);
-            params.cylinderCount = engine->getCylinderCount();
+            params.cylinderCount = chamberCount;
             params.revLimit = m_revLimit;
             params.timingCurve = m_timingCurve->generate(context);
-            params.cylinderCount = engine->getCylinderCount();
             params.limiterDuration = m_limiterDuration;
             engine->getIgnitionModule()->initialize(params);
 

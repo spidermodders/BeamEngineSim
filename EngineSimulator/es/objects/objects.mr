@@ -32,6 +32,8 @@ public node valvetrain_channel => __engine_sim__valvetrain_channel { /* void */ 
 public node vehicle_channel => __engine_sim__vehicle_channel { /* void */ }
 public node transmission_channel => __engine_sim__transmission_channel { /* void */ }
 public node throttle_channel => __engine_sim__throttle_channel { /* void */ }
+public node wankel_rotor_channel => __engine_sim__wankel_rotor_channel { /* void */ }
+public node wankel_peripheral_port_channel => __engine_sim__wankel_peripheral_port_channel { /* void */ }
 
 private node turbulence_to_flame_speed_ratio_default {
     alias output __out:
@@ -140,6 +142,101 @@ public node engine {
             hf_gain: hf_gain,
             jitter: jitter,
             noise: noise
+        );
+}
+
+// Wankel Engine
+public node wankel_engine_parameters {
+    input name: "";
+    input redline: 6000 * units.rpm;
+    input starter_speed: 200 * units.rpm;
+    input starter_torque: 200 * units.lb_ft;
+    input fuel: fuel();
+    input rotor_calculation_quality: 1024;
+    input rotor_housing_resolution: 256;
+}
+
+private node _wankel_engine => __engine_sim__wankel_engine {
+    input name [string];
+
+    input redline [float];
+    input starter_speed [float];
+    input starter_torque [float];
+    input dyno_min_speed [float];
+    input dyno_max_speed [float];
+    input dyno_hold_step [float];
+
+    input rotor_calculation_quality [int];
+    input rotor_housing_resolution [int];
+
+    input fuel [fuel];
+    input throttle [throttle_channel];
+
+    input simulation_frequency [float];
+    input hf_gain [float];
+    input jitter [float];
+    input noise [float];
+
+    input heat_transfer_coefficient [float];
+    input block_temperature [float];
+
+    alias output __out [engine_channel];
+}
+
+public node wankel_engine {
+    input params: wankel_engine_parameters();
+    input name: params.name;
+
+    input redline: params.redline;
+    input starter_speed: params.starter_speed;
+    input starter_torque: params.starter_torque;
+    input dyno_min_speed: 1000 * units.rpm;
+    input dyno_max_speed: redline;
+    input dyno_hold_step: 100 * units.rpm;
+    input rotor_calculation_quality: params.rotor_calculation_quality;
+    input rotor_housing_resolution: params.rotor_housing_resolution;
+
+    input fuel: params.fuel;
+    input throttle_gamma: 1.0;
+    input throttle:
+        direct_throttle_linkage(gamma: throttle_gamma);
+
+    input simulation_frequency: 10000;
+    input hf_gain: 0.01;
+    input jitter: 0.5;
+    input noise: 1.0;
+
+    input heat_transfer_coefficient: 1000.0;
+    input block_temperature: celcius(190);
+
+    // Community Edition parameters: accepted so CE engine files compile, not simulated here
+    input max_sle_solver_steps: 128;
+    input fluid_simulation_steps: 8;
+    input convolution: 1.0;
+
+    alias output __out [_wankel_engine]:
+        _wankel_engine(
+            name: name,
+
+            redline: redline,
+            starter_speed: starter_speed,
+            starter_torque: starter_torque,
+            dyno_min_speed: dyno_min_speed,
+            dyno_max_speed: dyno_max_speed,
+            dyno_hold_step: dyno_hold_step,
+            rotor_calculation_quality: rotor_calculation_quality,
+            rotor_housing_resolution: rotor_housing_resolution,
+
+            fuel: fuel,
+            throttle: throttle,
+
+            simulation_frequency: simulation_frequency,
+            hf_gain: hf_gain,
+            jitter: jitter,
+            noise: noise,
+
+            heat_transfer_coefficient: heat_transfer_coefficient,
+            block_temperature: block_temperature
         );
 }
 
@@ -281,6 +378,72 @@ public node piston {
             wrist_pin_position: params.wrist_pin_position,
             displacement: params.displacement
         );
+}
+
+// Rotor
+private node rotor_parameter_defaults {
+    input mass: 0.0;
+    input moment_of_inertia: 0.0;
+    input radius: 0.0;
+    input crown_gear_radius: 0.0;
+    input angle: 0.0;
+    input depth: 0.0;
+    input depression_volume: 0.0;
+}
+
+private node _wankel_rotor => __engine_sim__wankel_rotor {
+    input mass [float];
+    input moment_of_inertia [float];
+    input radius [float];
+    input crown_gear_radius [float];
+    input angle [float];
+    input depth [float];
+    input depression_volume [float];
+    alias output __out [wankel_rotor_channel];
+}
+
+public node wankel_rotor {
+    input params: rotor_parameter_defaults();
+    input mass: params.mass;
+    input moment_of_inertia: params.moment_of_inertia;
+    input radius: params.radius;
+    input crown_gear_radius: params.crown_gear_radius;
+    input angle: params.angle;
+    input depth: params.depth;
+    input depression_volume: params.depression_volume;
+    alias output __out [_wankel_rotor]:
+        _wankel_rotor(
+            mass: mass,
+            moment_of_inertia: moment_of_inertia,
+            radius: radius,
+            crown_gear_radius: crown_gear_radius,
+            angle: angle,
+            depth: depth,
+            depression_volume: depression_volume
+        );
+}
+
+public node wankel_peripheral_port => __engine_sim__wankel_peripheral_port {
+    input start_angle [float];
+    input end_angle [float];
+    input flow_rate [function];
+    alias output __out [wankel_peripheral_port_channel];
+}
+
+public node default_wankel_peripheral_port {
+    input start_angle;
+    input end_angle;
+    input max_flow_rate;
+    alias output __out:
+        wankel_peripheral_port(
+            start_angle: start_angle,
+            end_angle: end_angle,
+            flow_rate: flow_rate
+        );
+
+    function flow_rate()
+    flow_rate.add_sample(0, 0)
+    flow_rate.add_sample(1.0, max_flow_rate)
 }
 
 // Cylinder Bank

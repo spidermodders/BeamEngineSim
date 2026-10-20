@@ -310,41 +310,44 @@ void OscilloscopeCluster::sample() {
     Engine *engine = m_simulator->getEngine();
     if (engine == nullptr) return;
 
-    const double cylinderPressure = engine->getChamber(0)->m_system.pressure()
-        + engine->getChamber(0)->m_system.dynamicPressure(-1.0, 0.0);
-
     if (m_simulator->getCurrentIteration() % 2 == 0) {
         double cycleAngle = engine->getCrankshaft(0)->getCycleAngle();
         if (!engine->isSpinningCw()) {
-            cycleAngle = 4 * constants::pi - cycleAngle;
+            cycleAngle = engine->getCrankshaft(0)->getCycleLength() - cycleAngle;
         }
 
         getTotalExhaustFlowOscilloscope()->addDataPoint(
             cycleAngle,
             m_simulator->getTotalExhaustFlow() / m_simulator->getTimestep());
-        getCylinderPressureScope()->addDataPoint(
-            engine->getCrankshaft(0)->getCycleAngle(constants::pi),
-            std::sqrt(cylinderPressure));
-        getExhaustFlowOscilloscope()->addDataPoint(
-            cycleAngle,
-            engine->getChamber(0)->getLastTimestepExhaustFlow() / m_simulator->getTimestep());
-        getIntakeFlowOscilloscope()->addDataPoint(
-            cycleAngle,
-            engine->getChamber(0)->getLastTimestepIntakeFlow() / m_simulator->getTimestep());
-        getCylinderMoleculesScope()->addDataPoint(
-            cycleAngle,
-            engine->getChamber(0)->m_system.n());
-        getExhaustValveLiftOscilloscope()->addDataPoint(
-            cycleAngle,
-            engine->getChamber(0)->getCylinderHead()->exhaustValveLift(
-                engine->getChamber(0)->getPiston()->getCylinderIndex()));
-        getIntakeValveLiftOscilloscope()->addDataPoint(
-            cycleAngle,
-            engine->getChamber(0)->getCylinderHead()->intakeValveLift(
-                engine->getChamber(0)->getPiston()->getCylinderIndex()));
-        getPvScope()->addDataPoint(
-            engine->getChamber(0)->getVolume(),
-            std::sqrt(engine->getChamber(0)->m_system.pressure()));
+
+        if (engine->getCylinderCount() > 0) {
+            const double cylinderPressure = engine->getChamber(0)->m_system.pressure()
+                + engine->getChamber(0)->m_system.dynamicPressure(-1.0, 0.0);
+
+            getCylinderPressureScope()->addDataPoint(
+                engine->getCrankshaft(0)->getCycleAngle(constants::pi),
+                std::sqrt(cylinderPressure));
+            getExhaustFlowOscilloscope()->addDataPoint(
+                cycleAngle,
+                engine->getChamber(0)->getLastTimestepExhaustFlow() / m_simulator->getTimestep());
+            getIntakeFlowOscilloscope()->addDataPoint(
+                cycleAngle,
+                engine->getChamber(0)->getLastTimestepIntakeFlow() / m_simulator->getTimestep());
+            getCylinderMoleculesScope()->addDataPoint(
+                cycleAngle,
+                engine->getChamber(0)->m_system.n());
+            getExhaustValveLiftOscilloscope()->addDataPoint(
+                cycleAngle,
+                engine->getChamber(0)->getCylinderHead()->exhaustValveLift(
+                    engine->getChamber(0)->getPiston()->getCylinderIndex()));
+            getIntakeValveLiftOscilloscope()->addDataPoint(
+                cycleAngle,
+                engine->getChamber(0)->getCylinderHead()->intakeValveLift(
+                    engine->getChamber(0)->getPiston()->getCylinderIndex()));
+            getPvScope()->addDataPoint(
+                engine->getChamber(0)->getVolume(),
+                std::sqrt(engine->getChamber(0)->m_system.pressure()));
+        }
     }
 
     m_exhaustFlowScope->m_yMin = m_intakeFlowScope->m_yMin =
@@ -363,6 +366,11 @@ void OscilloscopeCluster::sample() {
 
 void OscilloscopeCluster::setSimulator(Simulator *simulator) {
     m_simulator = simulator;
+
+    Engine *engine = (simulator != nullptr) ? simulator->getEngine() : nullptr;
+    if (engine != nullptr && engine->getCrankshaftCount() > 0) {
+        m_totalExhaustFlowScope->m_xMax = engine->getCrankshaft(0)->getCycleLength();
+    }
 }
 
 void OscilloscopeCluster::renderScope(

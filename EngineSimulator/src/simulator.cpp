@@ -125,7 +125,7 @@ bool Simulator::simulateStep() {
     const double cycleAngle = outputShaft->getCycleAngle();
     // Wrap into the ring: an angle outside [0, 4pi) used to make the catch-up loop below spin forever
     const int index = std::isfinite(cycleAngle)
-        ? ((static_cast<int>(std::floor(DynoTorqueSamples * cycleAngle / (4 * constants::pi))) % DynoTorqueSamples) + DynoTorqueSamples) % DynoTorqueSamples
+        ? ((static_cast<int>(std::floor(DynoTorqueSamples * cycleAngle / outputShaft->getCycleLength())) % DynoTorqueSamples) + DynoTorqueSamples) % DynoTorqueSamples
         : (m_lastDynoTorqueSample < 0 ? 0 : m_lastDynoTorqueSample);
     const int step = m_engine->isSpinningCw() ? 1 : -1;
     m_dynoTorqueSamples[index] = m_dyno.getTorque();

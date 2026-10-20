@@ -23,9 +23,10 @@ namespace es_script {
             rodJournal->m_crankshaft = this;
         }
 
-        void generate(Crankshaft *crankshaft, EngineContext *context) {
+        void generate(Crankshaft *crankshaft, EngineContext *context, double cycleAngle = 4 * constants::pi) {
             Crankshaft::Parameters params = m_parameters;
             params.rodJournals = (int)m_rodJournals.size();
+            params.cycleAngle = cycleAngle;
 
             crankshaft->initialize(params);
             for (int i = 0; i < params.rodJournals; ++i) {
