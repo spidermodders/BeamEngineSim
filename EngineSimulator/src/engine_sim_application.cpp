@@ -696,6 +696,7 @@ static std::string writeEngineWrapper(const std::string &path) {
     std::ifstream in(path);
     const std::string text((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
     std::string engineNode, vehicleNode, transmissionNode;
+    bool hasMain = false;
     // Classify nodes by what their body instantiates, not by name: helper nodes come first in most files
     const std::regex anyNode(R"((public|private)\s+node\s+(\w+))");
     std::vector<std::smatch> nodes;
@@ -703,7 +704,7 @@ static std::string writeEngineWrapper(const std::string &path) {
     for (size_t i = 0; i < nodes.size(); ++i) {
         if (nodes[i][1] != "public") continue;
         const std::string name = nodes[i][2];
-        if (name == "main") return "";
+        if (name == "main") { hasMain = true; break; }
         const size_t begin = nodes[i].position(0);
         const size_t stop = (i + 1 < nodes.size()) ? nodes[i + 1].position(0) : text.size();
         const std::string body = text.substr(begin, stop - begin);
@@ -712,14 +713,18 @@ static std::string writeEngineWrapper(const std::string &path) {
         else if (vehicleNode.empty() && builds("vehicle")) vehicleNode = name;
         else if (transmissionNode.empty() && builds("transmission")) transmissionNode = name;
     }
-    if (engineNode.empty()) return "";
+    if (!hasMain && engineNode.empty()) return "";
 
     std::string importPath = path;
     std::replace(importPath.begin(), importPath.end(), '\\', '/');
     const std::string wrapper = "_bridge_engine_wrapper.mr";
     std::ofstream out(wrapper);
-    out << "import \"engine_sim.mr\"\nimport \"" << importPath << "\"\n\n"
-        << "set_engine(" << engineNode << "())\n";
+    out << "import \"engine_sim.mr\"\nimport \"" << importPath << "\"\n\n";
+    if (hasMain) {
+        out << "main()\n";
+        return wrapper;
+    }
+    out << "set_engine(" << engineNode << "())\n";
     if (!vehicleNode.empty()) out << "set_vehicle(" << vehicleNode << "())\n";
     if (!transmissionNode.empty()) out << "set_transmission(" << transmissionNode << "())\n";
     return wrapper;
